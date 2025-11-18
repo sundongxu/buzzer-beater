@@ -1,0 +1,24 @@
+{
+    "name": "BuzzerBeater",
+    "short_name": "BuzzerBeater",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#FFFFFF",
+    "theme_color": "#FF9800",
+    "description": "让篮球更有趣，让球迷更懂球，让打球更容易",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
+
