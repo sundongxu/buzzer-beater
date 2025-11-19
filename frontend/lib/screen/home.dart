@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../provider/auth.dart';
 import '../service/api.dart';
+import '../widgets/team_selector.dart';
 import 'nba_teams.dart';
 
 class Home extends StatelessWidget {
@@ -211,6 +212,35 @@ class Home extends StatelessWidget {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 16),
+                    // 更换主队按钮
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => showTeamSelector(context),
+                        icon: Icon(
+                          Icons.swap_horiz,
+                          color: user.team.primaryColor,
+                        ),
+                        label: Text(
+                          '更换主队',
+                          style: TextStyle(
+                            color: user.team.primaryColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                            color: user.team.primaryColor,
+                            width: 1.5,
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -233,7 +263,7 @@ class Home extends StatelessWidget {
               icon: Icons.sports_basketball,
               title: 'NBA 球队',
               subtitle: '查看所有 30 支 NBA 球队',
-              color: const Color(0xFFFF8A65),
+              color: Theme.of(context).colorScheme.primary,
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const NBATeamsScreen()),

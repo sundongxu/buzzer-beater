@@ -83,6 +83,14 @@ class API {
     return res.data as Map<String, dynamic>;
   }
 
+  // 更新主队
+  static Future<Map<String, dynamic>> updateTeam(int teamId) async {
+    final res = await dio.put('/users/me/team', data: {
+      'team_id': teamId,
+    });
+    return res.data as Map<String, dynamic>;
+  }
+
   // 获取球队列表
   static Future<List<dynamic>> getTeams() async {
     final res = await dio.get('/teams');

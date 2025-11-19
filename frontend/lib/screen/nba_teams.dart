@@ -59,7 +59,6 @@ class _NBATeamsScreenState extends State<NBATeamsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('NBA 球队'),
-        backgroundColor: const Color(0xFFFF8A65),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

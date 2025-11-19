@@ -54,6 +54,7 @@ func main() {
 			// 用户资源
 			authGroup.GET("/users/me", api.GetCurrentUser)      // 获取当前用户
 			authGroup.PUT("/users/me/avatar", api.UpdateAvatar) // 更新头像
+			authGroup.PUT("/users/me/team", api.UpdateTeam)     // 更新主队
 
 			// 会话资源
 			authGroup.DELETE("/session", api.DeleteSession) // 注销

@@ -100,7 +100,7 @@ func CreateUser(c *gin.Context) {
 	// 查询创建时间
 	var createdAt string
 	db.GetDB().QueryRow("SELECT created_at FROM users WHERE id = ?", userID).Scan(&createdAt)
-	
+
 	// 返回响应
 	response := RegisterResponse{
 		ID:        int(userID),
@@ -198,3 +198,53 @@ func UpdateAvatar(c *gin.Context) {
 	util.SuccessResponse(c, http.StatusOK, gin.H{"avatar": newAvatarPath})
 }
 
+// UpdateTeam 更新主队
+func UpdateTeam(c *gin.Context) {
+	// 从 context 获取用户 ID
+	userID, exists := c.Get("user_id")
+	if !exists {
+		util.ErrorResponse(c, http.StatusUnauthorized, "未授权")
+		return
+	}
+
+	// 获取新的 team_id
+	var req struct {
+		TeamID int `json:"team_id" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		util.ErrorResponse(c, http.StatusBadRequest, "请提供有效的球队ID")
+		return
+	}
+
+	// 验证球队是否存在
+	var teamExists bool
+	checkQuery := "SELECT EXISTS(SELECT 1 FROM teams WHERE id = ?)"
+	db.GetDB().QueryRow(checkQuery, req.TeamID).Scan(&teamExists)
+	if !teamExists {
+		util.ErrorResponse(c, http.StatusBadRequest, "球队不存在")
+		return
+	}
+
+	// 更新用户的主队
+	updateQuery := "UPDATE users SET team_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?"
+	_, err := db.GetDB().Exec(updateQuery, req.TeamID, userID)
+	if err != nil {
+		util.ErrorResponse(c, http.StatusInternalServerError, "更新主队失败")
+		return
+	}
+
+	// 查询新的球队信息
+	var team model.Team
+	teamQuery := "SELECT id, name, code, color, accent FROM teams WHERE id = ?"
+	err = db.GetDB().QueryRow(teamQuery, req.TeamID).Scan(
+		&team.ID, &team.Name, &team.Code, &team.Color, &team.Accent,
+	)
+	if err != nil {
+		util.ErrorResponse(c, http.StatusInternalServerError, "查询球队信息失败")
+		return
+	}
+
+	// 返回新的球队信息
+	util.SuccessResponse(c, http.StatusOK, team)
+}

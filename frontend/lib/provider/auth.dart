@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../model/user.dart';
+import '../model/team.dart';
 import '../service/api.dart';
 import '../service/storage.dart';
 
@@ -16,14 +17,63 @@ class Auth with ChangeNotifier {
   // 动态主题
   ThemeData get theme {
     if (_user != null) {
+      final primaryColor = _user!.team.primaryColor;
+      final accentColor = _user!.team.accentColor;
+      
       return ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: _user!.team.primaryColor,
+          seedColor: primaryColor,
+          primary: primaryColor,
+          secondary: accentColor,
         ),
         useMaterial3: true,
         appBarTheme: AppBarTheme(
-          backgroundColor: _user!.team.primaryColor,
+          backgroundColor: primaryColor,
           foregroundColor: Colors.white,
+          elevation: 0,
+        ),
+        floatingActionButtonTheme: FloatingActionButtonThemeData(
+          backgroundColor: primaryColor,
+          foregroundColor: Colors.white,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: primaryColor,
+            foregroundColor: Colors.white,
+          ),
+        ),
+        progressIndicatorTheme: ProgressIndicatorThemeData(
+          color: primaryColor,
+        ),
+        switchTheme: SwitchThemeData(
+          thumbColor: MaterialStateProperty.resolveWith((states) {
+            if (states.contains(MaterialState.selected)) {
+              return primaryColor;
+            }
+            return null;
+          }),
+          trackColor: MaterialStateProperty.resolveWith((states) {
+            if (states.contains(MaterialState.selected)) {
+              return primaryColor.withOpacity(0.5);
+            }
+            return null;
+          }),
+        ),
+        checkboxTheme: CheckboxThemeData(
+          fillColor: MaterialStateProperty.resolveWith((states) {
+            if (states.contains(MaterialState.selected)) {
+              return primaryColor;
+            }
+            return null;
+          }),
+        ),
+        radioTheme: RadioThemeData(
+          fillColor: MaterialStateProperty.resolveWith((states) {
+            if (states.contains(MaterialState.selected)) {
+              return primaryColor;
+            }
+            return null;
+          }),
         ),
       );
     }
@@ -127,6 +177,24 @@ class Auth with ChangeNotifier {
     await Storage.clearToken();
 
     notifyListeners();
+  }
+
+  // 更新主队
+  Future<void> updateTeam(int teamId) async {
+    final teamData = await API.updateTeam(teamId);
+    
+    // 更新用户的主队信息
+    if (_user != null) {
+      _user = User(
+        id: _user!.id,
+        nickname: _user!.nickname,
+        avatar: _user!.avatar,
+        team: Team.fromJson(teamData),
+        createdAt: _user!.createdAt,
+      );
+      
+      notifyListeners();
+    }
   }
 }
 

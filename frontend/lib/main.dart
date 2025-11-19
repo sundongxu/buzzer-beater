@@ -22,6 +22,10 @@ class BuzzerBeaterApp extends StatelessWidget {
           if (auth.isLoading) {
             return MaterialApp(
               debugShowCheckedModeBanner: false,
+              theme: ThemeData(
+                colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
+                useMaterial3: true,
+              ),
               home: Scaffold(
                 body: Center(
                   child: Column(
@@ -33,7 +37,9 @@ class BuzzerBeaterApp extends StatelessWidget {
                         color: Colors.orange,
                       ),
                       SizedBox(height: 24),
-                      CircularProgressIndicator(),
+                      CircularProgressIndicator(
+                        color: Colors.orange,
+                      ),
                     ],
                   ),
                 ),

@@ -48,7 +48,6 @@ class _NBAPlayersScreenState extends State<NBAPlayersScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('${widget.team.fullNameZh} 球员'),
-        backgroundColor: const Color(0xFFFF8A65),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -81,19 +80,21 @@ class _NBAPlayersScreenState extends State<NBAPlayersScreen> {
   }
 
   Widget _buildPlayerCard(NBAPlayer player) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
         leading: CircleAvatar(
           radius: 30,
-          backgroundColor: const Color(0xFFFF8A65).withOpacity(0.2),
+          backgroundColor: primaryColor.withOpacity(0.2),
           child: Text(
             player.jerseyNumber ?? '?',
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 20,
-              color: Color(0xFFFF8A65),
+              color: primaryColor,
             ),
           ),
         ),
@@ -131,6 +132,8 @@ class _NBAPlayersScreenState extends State<NBAPlayersScreen> {
   }
 
   void _showPlayerDetails(NBAPlayer player) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -163,13 +166,13 @@ class _NBAPlayersScreenState extends State<NBAPlayersScreen> {
                     const SizedBox(height: 16),
                     CircleAvatar(
                       radius: 50,
-                      backgroundColor: const Color(0xFFFF8A65).withOpacity(0.2),
+                      backgroundColor: primaryColor.withOpacity(0.2),
                       child: Text(
                         player.jerseyNumber ?? '?',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 36,
-                          color: Color(0xFFFF8A65),
+                          color: primaryColor,
                         ),
                       ),
                     ),
@@ -224,15 +227,17 @@ class _NBAPlayersScreenState extends State<NBAPlayersScreen> {
   }
 
   Widget _buildInfoSection(String title, List<Widget> children) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Color(0xFFFF8A65),
+            color: primaryColor,
           ),
         ),
         const SizedBox(height: 12),
