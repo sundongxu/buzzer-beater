@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../provider/auth.dart';
 import '../service/api.dart';
+import 'nba_teams.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});
@@ -216,15 +217,50 @@ class Home extends StatelessWidget {
             ),
             const SizedBox(height: 32),
 
-            // 占位文本
-            Center(
-              child: Text(
-                '更多功能敬请期待...',
-                style: TextStyle(
-                  color: Colors.grey[400],
-                  fontSize: 16,
-                ),
+            // 功能卡片
+            const Text(
+              '探索 NBA',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
               ),
+            ),
+            const SizedBox(height: 16),
+            
+            // NBA 球队入口
+            _buildFeatureCard(
+              context,
+              icon: Icons.sports_basketball,
+              title: 'NBA 球队',
+              subtitle: '查看所有 30 支 NBA 球队',
+              color: const Color(0xFFFF8A65),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const NBATeamsScreen()),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+            
+            // 新闻入口（占位）
+            _buildFeatureCard(
+              context,
+              icon: Icons.newspaper,
+              title: '球队新闻',
+              subtitle: '敬请期待...',
+              color: Colors.grey,
+              onTap: null,
+            ),
+            const SizedBox(height: 12),
+            
+            // 集锦入口（占位）
+            _buildFeatureCard(
+              context,
+              icon: Icons.play_circle_outline,
+              title: '比赛集锦',
+              subtitle: '敬请期待...',
+              color: Colors.grey,
+              onTap: null,
             ),
           ],
         ),
@@ -234,6 +270,67 @@ class Home extends StatelessWidget {
 
   String _formatDate(DateTime date) {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+
+  Widget _buildFeatureCard(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    VoidCallback? onTap,
+  }) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 32),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (onTap != null)
+                Icon(Icons.arrow_forward_ios, size: 20, color: Colors.grey[400]),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

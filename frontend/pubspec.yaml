@@ -22,6 +22,9 @@ dependencies:
   # 图片选择
   image_picker: ^1.0.4
   
+  # SVG 支持
+  flutter_svg: ^2.0.10
+  
   # UI
   cupertino_icons: ^1.0.8
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"buzzerbeater/api"
+	"buzzerbeater/config"
 	"buzzerbeater/db"
 	"buzzerbeater/middleware"
 	"log"
@@ -10,6 +11,9 @@ import (
 )
 
 func main() {
+	// 初始化配置
+	config.Init()
+
 	// 初始化数据库
 	db.Init()
 	defer db.Close()
@@ -37,7 +41,11 @@ func main() {
 		// ========== 公开接口 ==========
 		apiGroup.POST("/users", api.CreateUser)      // 注册
 		apiGroup.POST("/session", api.CreateSession) // 登录
-		apiGroup.GET("/teams", api.GetTeams)         // 球队列表
+		apiGroup.GET("/teams", api.GetTeams)         // 球队列表（本地数据）
+
+		// NBA 数据（公开）
+		apiGroup.GET("/nba/teams", api.GetNBATeams)     // NBA 球队列表
+		apiGroup.GET("/nba/players", api.GetNBAPlayers) // NBA 球员列表
 
 		// ========== 需要认证的接口 ==========
 		authGroup := apiGroup.Group("")
@@ -49,6 +57,9 @@ func main() {
 
 			// 会话资源
 			authGroup.DELETE("/session", api.DeleteSession) // 注销
+
+			// NBA 数据（需要认证）
+			authGroup.GET("/nba/players/:id/stats", api.GetNBAPlayerStats) // 球员统计
 		}
 	}
 
