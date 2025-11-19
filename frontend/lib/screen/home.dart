@@ -1,45 +1,41 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../provider/auth.dart';
 import '../service/api.dart';
-import '../widgets/team_selector.dart';
-import 'nba_teams.dart';
+import 'profile.dart';
+import 'tabs/feed.dart';
+import 'tabs/ranking.dart';
+import 'tabs/legend.dart';
 
-class Home extends StatelessWidget {
+class Home extends StatefulWidget {
   const Home({super.key});
 
-  Future<void> _handleLogout(BuildContext context) async {
-    // 显示确认对话框
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('确认注销'),
-        content: const Text('确定要退出登录吗？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('取消'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('确定'),
-          ),
-        ],
-      ),
-    );
+  @override
+  State<Home> createState() => _HomeState();
+}
 
-    if (confirmed == true && context.mounted) {
-      try {
-        await context.read<Auth>().logout();
-        // 注销成功后会自动跳转到登录页（main.dart 中处理）
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('注销失败：${e.toString()}')),
-          );
-        }
+class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  int _currentTabIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      if (_tabController.indexIsChanging) {
+        setState(() {
+          _currentTabIndex = _tabController.index;
+        });
       }
-    }
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   @override
@@ -53,314 +49,472 @@ class Home extends StatelessWidget {
       );
     }
 
+    final primaryColor = user.team.primaryColor;
+    final accentColor = user.team.accentColor;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('BuzzerBeater'),
-        actions: [
-          // 用户头像
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: CircleAvatar(
-              backgroundImage: NetworkImage(
-                API.getImageUrl(user.avatar),
-              ),
-            ),
-          ),
-          // 注销按钮
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => _handleLogout(context),
-            tooltip: '注销',
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // 用户头像（大）
-            Center(
-              child: Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  image: DecorationImage(
-                    image: NetworkImage(API.getImageUrl(user.avatar)),
-                    fit: BoxFit.cover,
-                  ),
-                  border: Border.all(
-                    color: user.team.primaryColor,
-                    width: 3,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // 欢迎语
-            Text(
-              '欢迎回来，${user.nickname}！',
-              style: Theme.of(context).textTheme.headlineSmall,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 32),
-
-            // 主队信息卡片
-            Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(
-                  color: user.team.primaryColor.withOpacity(0.3),
-                  width: 2,
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.sports_basketball,
-                          color: user.team.primaryColor,
-                          size: 28,
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          '我的主队',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                      ],
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            // 简洁AppBar
+            SliverAppBar(
+              expandedHeight: 70,
+              floating: false,
+              pinned: true,
+              flexibleSpace: FlexibleSpaceBar(
+                background: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [primaryColor, accentColor],
                     ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: user.team.primaryColor,
-                          ),
-                          child: Center(
-                            child: Text(
-                              user.team.code,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              ),
+                  ),
+                  child: SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      child: Row(
+                        children: [
+                          // BuzzerBeater Logo - 扁平化篮板
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 8,
+                                  spreadRadius: 1,
+                                ),
+                              ],
+                            ),
+                            child: CustomPaint(
+                              painter: _BuzzerBeatLogo(primaryColor),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                user.team.name,
-                                style: Theme.of(context).textTheme.titleMedium,
+                          const Spacer(),
+                          // 用户头像 - 点击进入个人中心
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const ProfileScreen(),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 2.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.15),
+                                    blurRadius: 8,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                user.team.code,
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 12,
+                              child: CircleAvatar(
+                                radius: 18,
+                                backgroundImage: NetworkImage(
+                                  API.getImageUrl(user.avatar),
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: user.team.accentColor.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            '主队',
-                            style: TextStyle(
-                              color: user.team.accentColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const Divider(height: 32),
-                    Row(
-                      children: [
-                        Icon(Icons.calendar_today,
-                            size: 16, color: Colors.grey[600]),
-                        const SizedBox(width: 8),
-                        Text(
-                          '加入时间：${_formatDate(user.createdAt)}',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // 更换主队按钮
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: () => showTeamSelector(context),
-                        icon: Icon(
-                          Icons.swap_horiz,
-                          color: user.team.primaryColor,
-                        ),
-                        label: Text(
-                          '更换主队',
-                          style: TextStyle(
-                            color: user.team.primaryColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(
-                            color: user.team.primaryColor,
-                            width: 1.5,
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
+                        ],
                       ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // Tab导航栏
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _StickyTabBarDelegate(
+                primaryColor,
+                TabBar(
+                  controller: _tabController,
+                  labelColor: primaryColor,
+                  unselectedLabelColor: Colors.grey,
+                  indicatorColor: primaryColor,
+                  indicatorWeight: 3,
+                  indicatorSize: TabBarIndicatorSize.label,
+                  labelStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  unselectedLabelStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.normal,
+                  ),
+                  tabs: [
+                    Tab(
+                      icon: _AnimatedTabIcon(
+                        icon: Icons.whatshot,
+                        isSelected: _currentTabIndex == 0,
+                        color: primaryColor,
+                      ),
+                      text: '动态',
+                    ),
+                    Tab(
+                      icon: _AnimatedTabIcon(
+                        icon: Icons.leaderboard,
+                        isSelected: _currentTabIndex == 1,
+                        color: primaryColor,
+                      ),
+                      text: '榜单',
+                    ),
+                    Tab(
+                      icon: _AnimatedTabIcon(
+                        icon: Icons.stars,
+                        isSelected: _currentTabIndex == 2,
+                        color: primaryColor,
+                      ),
+                      text: '传奇',
                     ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 32),
-
-            // 功能卡片
-            const Text(
-              '探索 NBA',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            
-            // NBA 球队入口
-            _buildFeatureCard(
-              context,
-              icon: Icons.sports_basketball,
-              title: 'NBA 球队',
-              subtitle: '查看所有 30 支 NBA 球队',
-              color: Theme.of(context).colorScheme.primary,
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const NBATeamsScreen()),
-                );
-              },
-            ),
-            const SizedBox(height: 12),
-            
-            // 新闻入口（占位）
-            _buildFeatureCard(
-              context,
-              icon: Icons.newspaper,
-              title: '球队新闻',
-              subtitle: '敬请期待...',
-              color: Colors.grey,
-              onTap: null,
-            ),
-            const SizedBox(height: 12),
-            
-            // 集锦入口（占位）
-            _buildFeatureCard(
-              context,
-              icon: Icons.play_circle_outline,
-              title: '比赛集锦',
-              subtitle: '敬请期待...',
-              color: Colors.grey,
-              onTap: null,
-            ),
+          ];
+        },
+        body: TabBarView(
+          controller: _tabController,
+          children: const [
+            FeedTab(),
+            RankingTab(),
+            LegendTab(),
           ],
-        ),
-      ),
-    );
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-  }
-
-  Widget _buildFeatureCard(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-    VoidCallback? onTap,
-  }) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Row(
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: color, size: 32),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (onTap != null)
-                Icon(Icons.arrow_forward_ios, size: 20, color: Colors.grey[400]),
-            ],
-          ),
         ),
       ),
     );
   }
 }
 
+// TabBar固定delegate
+class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
+  const _StickyTabBarDelegate(this.primaryColor, this.tabBar);
+
+  final Color primaryColor;
+  final TabBar tabBar;
+
+  @override
+  double get minExtent => tabBar.preferredSize.height;
+
+  @override
+  double get maxExtent => tabBar.preferredSize.height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: tabBar,
+    );
+  }
+
+  @override
+  bool shouldRebuild(_StickyTabBarDelegate oldDelegate) {
+    return tabBar != oldDelegate.tabBar ||
+        primaryColor != oldDelegate.primaryColor;
+  }
+}
+
+// 带动画效果的 Tab Icon
+class _AnimatedTabIcon extends StatefulWidget {
+  final IconData icon;
+  final bool isSelected;
+  final Color color;
+
+  const _AnimatedTabIcon({
+    required this.icon,
+    required this.isSelected,
+    required this.color,
+  });
+
+  @override
+  State<_AnimatedTabIcon> createState() => _AnimatedTabIconState();
+}
+
+class _AnimatedTabIconState extends State<_AnimatedTabIcon>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _rotateAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+
+    _rotateAnimation = Tween<double>(begin: 0.0, end: 0.1).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+
+    if (widget.isSelected) {
+      _controller.forward();
+    }
+  }
+
+  @override
+  void didUpdateWidget(_AnimatedTabIcon oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isSelected != oldWidget.isSelected) {
+      if (widget.isSelected) {
+        _controller.forward();
+      } else {
+        _controller.reverse();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _scaleAnimation.value,
+          child: Transform.rotate(
+            angle: _rotateAnimation.value,
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: widget.isSelected
+                  ? BoxDecoration(
+                      color: widget.color.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    )
+                  : null,
+              child: Icon(
+                widget.icon,
+                size: 24,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// App Icon 扁平化Logo - 极简风格
+class _BuzzerBeatLogo extends CustomPainter {
+  final Color teamColor;
+
+  _BuzzerBeatLogo(this.teamColor);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+
+    // 1. 计时器 - 极简黑色矩形
+    final timerBgPaint = Paint()
+      ..color = Colors.black
+      ..style = PaintingStyle.fill;
+
+    final timerRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(
+        size.width * 0.32,
+        size.height * 0.08,
+        size.width * 0.36,
+        size.height * 0.09,
+      ),
+      const Radius.circular(1.5),
+    );
+    canvas.drawRRect(timerRect, timerBgPaint);
+
+    // 计时器显示 "0:0"
+    final timerText = TextPainter(
+      text: const TextSpan(
+        text: '0:0',
+        style: TextStyle(
+          color: Color(0xFFFF0000),
+          fontSize: 5.5,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.2,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    timerText.layout();
+    timerText.paint(
+      canvas,
+      Offset(
+        center.dx - timerText.width / 2,
+        size.height * 0.092,
+      ),
+    );
+
+    // 2. 篮板 - 纯白色填充矩形
+    final backboardFillPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    final backboardRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(
+        size.width * 0.12,
+        size.height * 0.24,
+        size.width * 0.76,
+        size.height * 0.28,
+      ),
+      const Radius.circular(1),
+    );
+    canvas.drawRRect(backboardRect, backboardFillPaint);
+
+    // 篮板边框
+    final backboardBorderPaint = Paint()
+      ..color = const Color(0xFF2C3E50)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5;
+    canvas.drawRRect(backboardRect, backboardBorderPaint);
+
+    // 篮板小框（简化）
+    final innerBoxPaint = Paint()
+      ..color = const Color(0xFF7F8C8D)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.8;
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(
+          size.width * 0.30,
+          size.height * 0.35,
+          size.width * 0.40,
+          size.height * 0.14,
+        ),
+        const Radius.circular(0.8),
+      ),
+      innerBoxPaint,
+    );
+
+    // 3. 篮筐 - 红色实心椭圆
+    final rimPaint = Paint()
+      ..color = const Color(0xFFE74C3C)
+      ..style = PaintingStyle.fill;
+
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(center.dx, size.height * 0.58),
+        width: size.width * 0.35,
+        height: size.height * 0.07,
+      ),
+      rimPaint,
+    );
+
+    // 篮筐深色边框
+    final rimBorderPaint = Paint()
+      ..color = const Color(0xFFC0392B)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(center.dx, size.height * 0.58),
+        width: size.width * 0.35,
+        height: size.height * 0.07,
+      ),
+      rimBorderPaint,
+    );
+
+    // 4. 球网 - 极简三角形
+    final netPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    final netPath = Path();
+    netPath.moveTo(center.dx - size.width * 0.175, size.height * 0.58);
+    netPath.lineTo(center.dx + size.width * 0.175, size.height * 0.58);
+    netPath.lineTo(center.dx, size.height * 0.68);
+    netPath.close();
+    canvas.drawPath(netPath, netPaint);
+
+    // 球网边框
+    final netBorderPaint = Paint()
+      ..color = const Color(0xFFBDC3C7)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    canvas.drawPath(netPath, netBorderPaint);
+
+    // 简化网格（2条横线）
+    final netLinePaint = Paint()
+      ..color = const Color(0xFFECF0F1)
+      ..strokeWidth = 1;
+
+    for (int i = 1; i <= 2; i++) {
+      final y = size.height * 0.58 + (size.height * 0.10 * i / 3);
+      final xOffset = size.width * 0.175 * (1 - i / 3);
+      canvas.drawLine(
+        Offset(center.dx - xOffset, y),
+        Offset(center.dx + xOffset, y),
+        netLinePaint,
+      );
+    }
+
+    // 5. 篮球 - 扁平圆形
+    final ballCenter = Offset(center.dx, size.height * 0.82);
+    final ballRadius = size.width * 0.15;
+
+    // 篮球主体
+    final ballPaint = Paint()
+      ..color = teamColor
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(ballCenter, ballRadius, ballPaint);
+
+    // 篮球纹理（极简2条线）
+    final ballLinePaint = Paint()
+      ..color = Colors.black.withOpacity(0.35)
+      ..strokeWidth = 1.2
+      ..style = PaintingStyle.stroke;
+
+    // 竖线
+    canvas.drawLine(
+      Offset(ballCenter.dx, ballCenter.dy - ballRadius * 0.75),
+      Offset(ballCenter.dx, ballCenter.dy + ballRadius * 0.75),
+      ballLinePaint,
+    );
+
+    // 单条弧线
+    canvas.drawArc(
+      Rect.fromCircle(center: ballCenter, radius: ballRadius * 0.55),
+      -2.6,
+      2.0,
+      false,
+      ballLinePaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
